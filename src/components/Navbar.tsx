@@ -1,21 +1,39 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabaseClient';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
+import { supabase } from "../lib/supabaseClient";
 
 export default function Navbar() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
+    try {
+      const response = await fetch("http://localhost:3001/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        await supabase.auth.signOut(); 
+        router.push("/login");
+      } else {
+        const errorData = await response.json();
+        console.error("Backend logout failed:", errorData.error);
+        alert("Logout failed: " + (errorData.error || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+      alert("An error occurred during logout.");
+    }
   };
 
   if (loading) {
-    return null; // Atau tampilkan spinner/placeholder
+    return null;
   }
 
   return (
@@ -28,7 +46,10 @@ export default function Navbar() {
           {user ? (
             <div className="flex items-center space-x-4">
               <span className="text-sm">Halo, {user.email}</span>
-              <button onClick={handleLogout} className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm">
+              <button
+                onClick={handleLogout}
+                className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
+              >
                 Logout
               </button>
             </div>

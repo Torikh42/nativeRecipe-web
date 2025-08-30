@@ -1,25 +1,32 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Recipe } from '@/types';
-import { useAuth } from '../context/AuthContext';
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from "next/link";
+import Image from "next/image";
+import { Recipe } from "@/types";
+import { useAuth } from "../context/AuthContext";
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
-// Fungsi untuk mengambil data resep dari backend
-// Kita menggunakan { cache: 'no-store' } untuk memastikan data selalu baru setiap kali halaman di-refresh (baik untuk development)
 async function getRecipes(): Promise<Recipe[]> {
   try {
-    const res = await fetch('http://localhost:3001/api/recipes', { cache: 'no-store' });
+    const res = await fetch("http://localhost:3001/api/recipes", {
+      cache: "no-store",
+    });
 
     if (!res.ok) {
-      throw new Error('Gagal mengambil data resep dari backend');
+      throw new Error("Gagal mengambil data resep dari backend");
     }
 
     return res.json();
   } catch (error) {
+    
     console.error(error);
-    // Mengembalikan array kosong jika terjadi error agar halaman tidak rusak
     return [];
   }
 }
@@ -54,14 +61,22 @@ export default function Home() {
         {recipes.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {recipes.map((recipe) => (
-              <Card key={recipe.id}>
+              <Card key={recipe.id} className="overflow-hidden">
+                {recipe.image_url && (
+                  <div className="relative w-full h-48">
+                    <Image
+                      src={recipe.image_url}
+                      alt={recipe.title}
+                      layout="fill"
+                      objectFit="cover"
+                    />
+                  </div>
+                )}
                 <CardHeader>
                   <CardTitle>{recipe.title}</CardTitle>
                   <CardDescription>{recipe.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  {/* Anda bisa menambahkan lebih banyak detail di sini */}
-                </CardContent>
+                <CardContent></CardContent>
               </Card>
             ))}
           </div>

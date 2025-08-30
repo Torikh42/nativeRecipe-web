@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAuth } from "../../context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,15 +14,25 @@ export default function AddRecipePage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { user, session, loading } = useAuth();
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/login"); // Redirect jika belum login
+      router.push("/login");
     }
   }, [user, loading, router]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,16 +44,21 @@ export default function AddRecipePage() {
       return;
     }
 
-    console.log("User ID from frontend:", user?.id); 
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("instructions", instructions);
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
 
     try {
       const response = await fetch("http://localhost:3001/api/recipes", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ title, description, instructions }),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -74,49 +90,74 @@ export default function AddRecipePage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-24">
-      <h1 className="text-4xl font-bold mb-8">Tambah Resep Baru</h1>
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-lg bg-white p-8 rounded-lg shadow-md"
-      >
-        <div className="mb-4">
-          <Label htmlFor="title">Judul</Label>
-          <Input
-            type="text"
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <Label htmlFor="description">Deskripsi Singkat</Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
-        </div>
-        <div className="mb-6">
-          <Label htmlFor="instructions">Instruksi</Label>
-          <Textarea
-            id="instructions"
-            value={instructions}
-            onChange={(e) => setInstructions(e.target.value)}
-            required
-          />
-        </div>
-        <div className="flex items-center justify-between">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Menyimpan..." : "Simpan Resep"}
-          </Button>
-          <Button type="button" variant="outline" onClick={() => router.back()}>
-            Batal
-          </Button>
-        </div>
-      </form>
+    <main className="flex min-h-screen flex-col items-center p-6 md:p-24">
+      <div className="w-full max-w-2xl bg-white p-8 rounded-lg shadow-md">
+        <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center">Tambah Resep Baru</h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="title">Judul</Label>
+            <Input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Deskripsi Singkat</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="instructions">Instruksi</Label>
+            <Textarea
+              id="instructions"
+              value={instructions}
+              onChange={(e) => setInstructions(e.target.value)}
+              required
+              rows={6}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="image">Gambar Resep</Label>
+            <Input
+              type="file"
+              id="image"
+              accept="image/png, image/jpeg"
+              onChange={handleImageChange}
+            />
+          </div>
+
+          {previewUrl && (
+            <div className="mt-4">
+              <Label>Pratinjau Gambar</Label>
+              <div className="relative w-full h-64 mt-2">
+                <Image
+                  src={previewUrl}
+                  alt="Pratinjau Gambar"
+                  layout="fill"
+                  objectFit="cover"
+                  className="rounded-md"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-4">
+            <Button type="submit" disabled={isLoading} className="w-1/2">
+              {isLoading ? "Menyimpan..." : "Simpan Resep"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => router.back()}>
+              Batal
+            </Button>
+          </div>
+        </form>
+      </div>
     </main>
   );
 }
