@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabaseClient";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +11,7 @@ import { toast } from "sonner";
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState(""); 
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -25,19 +25,20 @@ export default function SignupPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        // Send full name along with other credentials
+        body: JSON.stringify({ email, password, fullName }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Pendaftaran gagal.");
+        throw new Error(data.message || "Pendaftaran gagal.");
       }
 
       toast.success(
         "Pendaftaran berhasil! Silakan cek email Anda untuk verifikasi."
       );
-      router.push("/login"); // Redirect ke halaman login setelah pendaftaran
+      router.push("/login");
     } catch (err) {
       if (err instanceof Error) {
         toast.error(err.message);
@@ -56,6 +57,16 @@ export default function SignupPage() {
         onSubmit={handleSignup}
         className="w-full max-w-md bg-white p-8 rounded-lg shadow-md"
       >
+        <div className="mb-4">
+          <Label htmlFor="fullName">Nama Lengkap</Label>
+          <Input
+            type="text"
+            id="fullName"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+          />
+        </div>
         <div className="mb-4">
           <Label htmlFor="email">Email</Label>
           <Input
@@ -82,7 +93,7 @@ export default function SignupPage() {
           </Button>
           <Link
             href="/login"
-            className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+            className="inline-block align-baseline font-bold text-sm text-primary hover:text-primary/80"
           >
             Sudah punya akun? Login
           </Link>

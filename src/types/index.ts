@@ -1,4 +1,9 @@
-// Didefinisikan sekali di sini, bisa diekspor ke file lain
+
+
+export interface UserProfile {
+  full_name: string;
+  email: string;
+}
 
 export interface Recipe {
   id: number;
@@ -8,6 +13,7 @@ export interface Recipe {
   description: string;
   instructions: string;
   image_url?: string;
+  User?: UserProfile; // Changed from profiles to User
 }
 
 export interface Ingredient {
