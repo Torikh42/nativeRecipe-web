@@ -11,7 +11,7 @@ type RecipeDetail = Recipe & {
 
 async function getRecipeDetails(id: string): Promise<RecipeDetail | null> {
   try {
-    const res = await fetch(`http://localhost:3001/api/recipes/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/recipes/${id}`, {
       cache: 'no-store',
     });
     if (!res.ok) {

@@ -104,7 +104,7 @@ export default function AddRecipeForm() {
     }
 
     try {
-      const response = await fetch("http://localhost:3001/api/recipes", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/recipes`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${session.access_token}`,

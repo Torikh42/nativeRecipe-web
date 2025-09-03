@@ -6,7 +6,7 @@ import RecipeCard from "./RecipeCard";
 
 async function getRecipes(): Promise<Recipe[]> {
   try {
-    const res = await fetch("http://localhost:3001/api/recipes", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/recipes`, {
       cache: "no-store",
     });
 
