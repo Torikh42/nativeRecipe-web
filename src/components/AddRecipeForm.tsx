@@ -10,14 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Ingredient } from "../types";
-import {
-  ChefHat,
-  Plus,
-  Trash2,
-  Upload,
-  Camera,
-  Utensils,
-} from "lucide-react";
+import { ChefHat, Plus, Trash2, Upload, Camera, Utensils } from "lucide-react";
 
 type IngredientForm = Pick<Ingredient, "name" | "quantity">;
 
@@ -30,15 +23,16 @@ export default function AddRecipeForm() {
   ]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const { user, session, loading } = useAuth();
+  const { user, token, isLoading: isAuthLoading } = useAuth();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isAuthLoading && !user) {
+      toast.error("Anda harus login untuk mengakses halaman ini.");
       router.push("/login");
     }
-  }, [user, loading, router]);
+  }, [user, isAuthLoading, router]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -66,9 +60,11 @@ export default function AddRecipeForm() {
   };
 
   const removeIngredient = (index: number) => {
-    const values = [...ingredients];
-    values.splice(index, 1);
-    setIngredients(values);
+    if (ingredients.length > 1) {
+      const values = [...ingredients];
+      values.splice(index, 1);
+      setIngredients(values);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,11 +78,11 @@ export default function AddRecipeForm() {
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
 
-    if (!session?.access_token) {
-      toast.error("Anda harus login untuk menambah resep.");
-      setIsLoading(false);
+    if (!token) {
+      toast.error("Sesi tidak valid. Silakan login kembali.");
+      setIsSubmitting(false);
       return;
     }
 
@@ -104,18 +100,21 @@ export default function AddRecipeForm() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/recipes`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/recipes`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.message || "Gagal mengirim data. Pastikan backend berjalan."
+          errorData.error || "Gagal mengirim data. Pastikan backend berjalan."
         );
       }
 
@@ -125,22 +124,20 @@ export default function AddRecipeForm() {
       if (err instanceof Error) {
         toast.error(err.message);
       } else {
-        toast.error("An unexpected error occurred");
+        toast.error("Terjadi kesalahan yang tidak terduga.");
       }
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (loading || !user) {
+  if (isAuthLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-yellow-50">
         <div className="bg-white p-8 rounded-xl shadow-lg border border-orange-100">
           <div className="flex items-center space-x-3">
             <ChefHat className="h-6 w-6 text-primary animate-pulse" />
-            <h1 className="text-2xl font-bold text-foreground">
-              Memuat atau Mengarahkan...
-            </h1>
+            <h1 className="text-2xl font-bold text-foreground">Memuat...</h1>
           </div>
         </div>
       </div>
@@ -238,6 +235,10 @@ export default function AddRecipeForm() {
                         type="button"
                         variant="outline"
                         onClick={() => {
+                          const input = document.getElementById(
+                            "image"
+                          ) as HTMLInputElement;
+                          if (input) input.value = "";
                           setImageFile(null);
                           setPreviewUrl(null);
                         }}
@@ -249,8 +250,8 @@ export default function AddRecipeForm() {
                   </div>
                 ) : (
                   <div className="text-center">
-                    <Upload className="h-12 w-12 text-orange-300 mx-auto mb-4" />
-                    <Label htmlFor="image" className="cursor-pointer">
+                    <Label htmlFor="image" className="cursor-pointer block">
+                      <Upload className="h-12 w-12 text-orange-300 mx-auto mb-4" />
                       <div className="text-lg font-medium text-foreground mb-2">
                         Upload Foto Resep
                       </div>
@@ -274,9 +275,7 @@ export default function AddRecipeForm() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="bg-secondary p-2 rounded-lg">
-                    <Utensils className="h-5 w-5 text-white" />
-                  </div>
+                  <Utensils className="h-5 w-5 text-primary" />
                   <h2 className="text-xl font-semibold text-foreground">
                     Bahan-bahan
                   </h2>
@@ -299,8 +298,8 @@ export default function AddRecipeForm() {
                     className="bg-white rounded-lg p-4 shadow-sm border border-green-100"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="bg-accent p-2 rounded-full">
-                        <span className="text-sm font-semibold text-foreground">
+                      <div className="flex items-center justify-center bg-accent h-8 w-8 rounded-full">
+                        <span className="font-semibold text-foreground">
                           {index + 1}
                         </span>
                       </div>
@@ -326,9 +325,9 @@ export default function AddRecipeForm() {
                         <Button
                           type="button"
                           variant="outline"
-                          size="sm"
+                          size="icon"
                           onClick={() => removeIngredient(index)}
-                          className="border-red-200 text-red-600 hover:bg-red-50 p-2"
+                          className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -342,9 +341,7 @@ export default function AddRecipeForm() {
             {/* Instructions Section */}
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <div className="bg-primary p-2 rounded-lg">
-                  <ChefHat className="h-5 w-5 text-white" />
-                </div>
+                <ChefHat className="h-5 w-5 text-primary" />
                 <h2 className="text-xl font-semibold text-foreground">
                   Cara Memasak
                 </h2>
@@ -367,11 +364,11 @@ export default function AddRecipeForm() {
             <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-orange-100">
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isSubmitting}
                 className="flex-1 h-12 bg-gradient-to-r from-primary to-orange-600 hover:from-primary/90 hover:to-orange-600/90 text-white shadow-lg transform hover:scale-[1.02] transition-all duration-200"
               >
-                {isLoading ? (
-                  <div className="flex items-center space-x-2">
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center space-x-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                     <span>Menyimpan Resep...</span>
                   </div>
