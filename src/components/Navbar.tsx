@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
-import { ChefHat, Plus, Home, User, LogOut, Menu, X } from "lucide-react";
+import { ChefHat, Plus, Home, User, LogOut, Menu, X, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 export default function Navbar() {
@@ -85,6 +85,18 @@ export default function Navbar() {
                 >
                   <Plus className="h-4 w-4" />
                   <span className="font-medium">Tambah Resep</span>
+                </Link>
+
+                <Link
+                  href="/ai-chef"
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                    isActive("/ai-chef")
+                      ? "bg-white/20 text-white shadow-md"
+                      : "text-orange-100 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span className="font-medium">Magic Chef</span>
                 </Link>
 
                 <div className="h-6 w-px bg-orange-300 mx-2" />
@@ -180,6 +192,19 @@ export default function Navbar() {
                   >
                     <Plus className="h-5 w-5" />
                     <span className="font-medium">Tambah Resep</span>
+                  </Link>
+
+                  <Link
+                    href="/ai-chef"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center space-x-3 px-4 py-3 mx-2 rounded-lg transition-all duration-200 ${
+                      isActive("/ai-chef")
+                        ? "bg-white/20 text-white shadow-md"
+                        : "text-orange-100 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    <Sparkles className="h-5 w-5" />
+                    <span className="font-medium">Magic Chef</span>
                   </Link>
 
                   <div className="border-t border-orange-400/30 mx-2 my-3" />
