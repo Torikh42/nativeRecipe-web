@@ -1,23 +1,60 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Utensils, ChefHat, Clock, AlertCircle } from "lucide-react";
+import { Sparkles, Utensils, ChefHat, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { z } from "zod";
+import { experimental_useObject as useObject } from '@ai-sdk/react';
 
-interface AiRecipeResponse {
-  title: string;
-  description: string;
-  ingredients: { name: string; quantity: string }[];
-  instructions: string;
-}
+const RecipeSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  ingredients: z.array(
+    z.object({
+      name: z.string(),
+      quantity: z.string(),
+    })
+  ),
+  instructions: z.string(),
+});
 
 export default function AiChefPage() {
   const [activeTab, setActiveTab] = useState<"text" | "image">("text");
   const [ingredients, setIngredients] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [recipe, setRecipe] = useState<AiRecipeResponse | null>(null);
+
+  const { 
+    object: textRecipe, 
+    submit: submitText, 
+    isLoading: isTextLoading,
+  } = useObject({
+    api: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/ai/generate-recipe`,
+    schema: RecipeSchema,
+    onError: (error: any) => {
+      toast.error(error.message || "Gagal memproses permintaan.");
+    },
+    onFinish: () => {
+      toast.success("Berhasil! Selamat memasak!");
+    }
+  });
+
+  const { 
+    object: imageRecipe, 
+    submit: submitImage, 
+    isLoading: isImageLoading,
+  } = useObject({
+    api: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/ai/identify-food`,
+    schema: RecipeSchema,
+    onError: (error: any) => {
+      toast.error(error.message || "Gagal memproses permintaan.");
+    },
+    onFinish: () => {
+      toast.success("Berhasil! Selamat memasak!");
+    }
+  });
+
+  const loading = isTextLoading || isImageLoading;
+  const recipe = activeTab === "text" ? textRecipe : imageRecipe;
   
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -36,61 +73,23 @@ export default function AiChefPage() {
   };
 
   const handleGenerate = async () => {
-    if (activeTab === "text" && !ingredients.trim()) {
-      toast.error("Mohon masukkan daftar bahan terlebih dahulu.");
-      return;
-    }
-
-    if (activeTab === "image" && !selectedImage) {
-      toast.error("Mohon upload foto makanan terlebih dahulu.");
-      return;
-    }
-
-    setLoading(true);
-    setRecipe(null);
-
-    try {
-      let endpoint = "/api/ai/generate-recipe";
-      let body = {};
-
-      if (activeTab === "text") {
-        const ingredientsList = ingredients
-          .split(/[,\n]/)
-          .map((i) => i.trim())
-          .filter((i) => i.length > 0);
-        body = { ingredients: ingredientsList };
-      } else {
-        endpoint = "/api/ai/identify-food";
-        body = { image: selectedImage };
+    if (activeTab === "text") {
+      if (!ingredients.trim()) {
+        toast.error("Mohon masukkan daftar bahan terlebih dahulu.");
+        return;
       }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${endpoint}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(body),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Gagal memproses permintaan.");
+      const ingredientsList = ingredients
+        .split(/[,\n]/)
+        .map((i) => i.trim())
+        .filter((i) => i.length > 0);
+      
+      submitText({ ingredients: ingredientsList });
+    } else {
+      if (!selectedImage) {
+        toast.error("Mohon upload foto makanan terlebih dahulu.");
+        return;
       }
-
-      setRecipe(data);
-      toast.success("Berhasil! Selamat memasak!");
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Terjadi kesalahan yang tidak diketahui.");
-      }
-    } finally {
-      setLoading(false);
+      submitImage({ image: selectedImage });
     }
   };
 
@@ -226,12 +225,12 @@ export default function AiChefPage() {
                   Bahan-bahan
                 </h3>
                 <ul className="space-y-3">
-                  {recipe.ingredients.map((ing, idx) => (
+                  {recipe.ingredients?.map((ing : any, idx : any) => (
                     <li key={idx} className="flex items-start bg-orange-50 p-3 rounded-lg">
                       <div className="h-2 w-2 rounded-full bg-orange-500 mt-2 mr-3 flex-shrink-0" />
                       <div>
-                        <span className="font-semibold text-gray-900">{ing.name}</span>
-                        <span className="text-gray-500 ml-1">({ing.quantity})</span>
+                        <span className="font-semibold text-gray-900">{ing?.name}</span>
+                        <span className="text-gray-500 ml-1">({ing?.quantity})</span>
                       </div>
                     </li>
                   ))}
