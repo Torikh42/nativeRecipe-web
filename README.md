@@ -1,39 +1,62 @@
 # NativeRecipe Web App 💻
 
-The web interface for NativeRecipe, offering a responsive and feature-rich experience for desktop and mobile web users.
+The modern web interface for NativeRecipe, built with speed, accessibility, and a premium user experience in mind.
 
 ## ✨ Key Features
 
--   **Magic Chef Integration**: Access the same powerful AI recipe generation on the web (`/ai-chef`).
--   **Responsive Design**: Optimized for all screen sizes using Tailwind CSS.
--   **Comprehensive Dashboard**: Manage your profile and recipes easily.
+-   **🍳 Magic Chef**: Unleash the power of AI to generate recipes based on ingredients you already have.
+-   **📱 Fully Responsive**: Seamless experience across mobile, tablet, and desktop devices.
+-   **🖼️ Image Management**: Upload and manage recipe photos with Cloudflare R2 integration.
+-   **🔒 Secure Auth**: Protected routes and personalized user dashboards.
+-   **🎨 Modern UI**: Beautifully crafted components using Tailwind CSS 4 and Radix UI.
 
 ## 🛠 Tech Stack
 
--   **Framework**: Next.js 14 (App Router)
+-   **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+-   **Library**: React 19
+-   **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
 -   **Language**: TypeScript
--   **Styling**: Tailwind CSS
 -   **Icons**: Lucide React
--   **State/Context**: React Context API
+-   **Components**: Radix UI (Shadcn UI style)
+-   **Auth**: Supabase Auth & JWT
+-   **State Management**: React Context & Hooks
 
 ## 🚀 Getting Started
 
-1.  **Install Dependencies**:
+### Prerequisites
+
+-   Node.js 20+ or Bun
+-   Backend API running (default: http://localhost:3001)
+
+### Installation
+
+1.  Navigate to the `web` directory:
+    ```bash
+    cd web
+    ```
+2.  Install dependencies:
     ```bash
     npm install
+    # or
+    bun install
     ```
-2.  **Environment Setup**:
-    Create `.env`:
+3.  Configure environment variables in `.env`:
     ```env
     NEXT_PUBLIC_API_URL=http://localhost:3001
-    NEXT_PUBLIC_SUPABASE_URL=...
-    NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
     ```
-3.  **Run Development Server**:
+4.  Run the development server:
     ```bash
     npm run dev
     ```
-    Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+### Build for Production
+
+```bash
+npm run build
+npm run start
+```
 
 ## 🤖 AI Chef
-Visit `/ai-chef` (accessible via the sparkler icon ✨ in the Navbar) to try out the AI recipe generator.
+Visit the `/ai-chef` page to interact with the Gemini-powered cooking assistant. Simply list your ingredients and watch the magic happen!
