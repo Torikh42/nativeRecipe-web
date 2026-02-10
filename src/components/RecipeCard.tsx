@@ -27,6 +27,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
               alt={recipe.title}
               layout="fill"
               objectFit="cover"
+              unoptimized
               className="group-hover:scale-110 transition-transform duration-300"
             />
 

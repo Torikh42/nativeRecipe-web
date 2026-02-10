@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Recipe, Ingredient } from "@/types";
@@ -48,24 +48,25 @@ async function getRecipeDetails(id: string): Promise<RecipeDetail | null> {
 export default function RecipeDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user, token } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (params.id) {
+    if (id) {
       const fetchRecipe = async () => {
         setIsLoading(true);
-        const data = await getRecipeDetails(params.id);
+        const data = await getRecipeDetails(id);
         setRecipe(data);
         setIsLoading(false);
       };
       fetchRecipe();
     }
-  }, [params.id]);
+  }, [id]);
 
   const handleDelete = async () => {
     if (!recipe) return;
@@ -248,6 +249,7 @@ export default function RecipeDetailPage({
                     src={recipe.image_url}
                     alt={recipe.title}
                     fill
+                    unoptimized
                     className="object-cover transition-transform hover:scale-105 duration-300"
                   />
                 </div>
